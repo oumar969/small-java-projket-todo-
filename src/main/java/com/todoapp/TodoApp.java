@@ -1,11 +1,9 @@
 package com.todoapp;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
-import java.awt.event.*;
-import java.awt.datatransfer.StringSelection;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -19,20 +17,17 @@ public class TodoApp extends JFrame {
     private JComboBox<String> categoryCombo;
     private JTextField deadlineField;
     private JButton addButton;
-    private JList<Task> taskList;
-    private DefaultListModel<Task> listModel;
-    private JButton deleteButton;
-    private JButton markCompleteButton;
+    private JTable taskTable;
+    private TaskTableModel tableModel;
     private JComboBox<String> categoryFilterCombo;
     private JLabel statsLabel;
     private List<Task> tasks;
     private List<String> categories;
-    private int draggedIndex = -1;
 
     public TodoApp() {
         setTitle("Todo App - Enhanced");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(700, 650);
+        setSize(950, 750);
         setLocationRelativeTo(null);
         setResizable(true);
 
@@ -45,7 +40,7 @@ public class TodoApp extends JFrame {
 
     private void initializeUI() {
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         JPanel inputPanel = createInputPanel();
         JPanel filterPanel = createFilterPanel();
@@ -64,25 +59,30 @@ public class TodoApp extends JFrame {
     }
 
     private JPanel createInputPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 4, 5, 5));
-        panel.setBorder(BorderFactory.createTitledBorder("Tilfoj ny opgave"));
+        JPanel panel = new JPanel(new GridLayout(2, 4, 10, 10));
+        panel.setBorder(BorderFactory.createTitledBorder("Tilfoej ny opgave"));
 
         JLabel taskLabel = new JLabel("Opgave:");
         taskField = new JTextField();
+        taskField.setFont(new Font("Arial", Font.PLAIN, 12));
 
         JLabel priorityLabel = new JLabel("Prioritet:");
         priorityCombo = new JComboBox<>(Task.Priority.values());
+        priorityCombo.setFont(new Font("Arial", Font.PLAIN, 12));
 
         JLabel categoryLabel = new JLabel("Kategori:");
         categoryCombo = new JComboBox<>();
         for (String cat : categories) {
             categoryCombo.addItem(cat);
         }
+        categoryCombo.setFont(new Font("Arial", Font.PLAIN, 12));
 
         JLabel deadlineLabel = new JLabel("Deadline (dd/MM/yyyy):");
         deadlineField = new JTextField();
+        deadlineField.setFont(new Font("Arial", Font.PLAIN, 12));
 
-        addButton = new JButton("Tilfoj opgave");
+        addButton = new JButton("Add opgave");
+        addButton.setFont(new Font("Arial", Font.BOLD, 12));
         addButton.addActionListener(e -> addTask());
 
         panel.add(taskLabel);
@@ -104,7 +104,7 @@ public class TodoApp extends JFrame {
     }
 
     private JPanel createFilterPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         panel.setBorder(BorderFactory.createTitledBorder("Filtre"));
 
         JLabel filterLabel = new JLabel("Filtrer efter kategori:");
@@ -113,7 +113,7 @@ public class TodoApp extends JFrame {
         for (String cat : categories) {
             categoryFilterCombo.addItem(cat);
         }
-        categoryFilterCombo.addActionListener(e -> updateTaskList());
+        categoryFilterCombo.addActionListener(e -> updateTaskTable());
 
         panel.add(filterLabel);
         panel.add(categoryFilterCombo);
@@ -125,41 +125,56 @@ public class TodoApp extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Opgaver"));
 
-        listModel = new DefaultListModel<>();
-        taskList = new JList<>(listModel);
-        taskList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        taskList.setCellRenderer(new TaskListCellRenderer());
+        tableModel = new TaskTableModel(tasks);
+        taskTable = new JTable(tableModel);
+        taskTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        taskTable.setRowHeight(30);
+        taskTable.setFont(new Font("Arial", Font.PLAIN, 12));
+        taskTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        taskTable.getTableHeader().setBackground(new Color(70, 130, 180));
+        taskTable.getTableHeader().setForeground(Color.WHITE);
 
-        setupDragAndDrop();
-        taskList.addListSelectionListener(e -> updateStatsLabel());
+        taskTable.getColumnModel().getColumn(0).setPreferredWidth(40);
+        taskTable.getColumnModel().getColumn(1).setPreferredWidth(180);
+        taskTable.getColumnModel().getColumn(2).setPreferredWidth(80);
+        taskTable.getColumnModel().getColumn(3).setPreferredWidth(100);
+        taskTable.getColumnModel().getColumn(4).setPreferredWidth(120);
 
-        JScrollPane scrollPane = new JScrollPane(taskList);
+        taskTable.setDefaultRenderer(Object.class, new TaskTableCellRenderer());
+
+        JScrollPane scrollPane = new JScrollPane(taskTable);
         panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
     }
 
     private JPanel createButtonPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 3, 5, 5));
+        JPanel panel = new JPanel(new GridLayout(2, 3, 10, 10));
         panel.setBorder(BorderFactory.createTitledBorder("Handlinger"));
 
-        markCompleteButton = new JButton("Mark som fuldfort");
+        JButton markCompleteButton = new JButton("Mark som fuldfoert");
+        markCompleteButton.setFont(new Font("Arial", Font.PLAIN, 11));
         markCompleteButton.addActionListener(e -> toggleTaskCompleted());
 
         JButton editButton = new JButton("Rediger");
+        editButton.setFont(new Font("Arial", Font.PLAIN, 11));
         editButton.addActionListener(e -> editTask());
 
-        deleteButton = new JButton("Slet opgave");
+        JButton deleteButton = new JButton("Slet opgave");
+        deleteButton.setFont(new Font("Arial", Font.PLAIN, 11));
         deleteButton.addActionListener(e -> deleteTask());
 
-        JButton clearCompletedButton = new JButton("Ryd fuldforte");
+        JButton clearCompletedButton = new JButton("Ryd fuldfoerte");
+        clearCompletedButton.setFont(new Font("Arial", Font.PLAIN, 11));
         clearCompletedButton.addActionListener(e -> clearCompletedTasks());
 
         JButton clearAllButton = new JButton("Ryd alt");
+        clearAllButton.setFont(new Font("Arial", Font.PLAIN, 11));
         clearAllButton.addActionListener(e -> clearAllTasks());
 
-        statsLabel = new JLabel("Statistik: 0 total, 0 fuldfort");
+        statsLabel = new JLabel("Statistik: 0 total | 0 fuldfoert | 0 ikke-fuldfoert");
         statsLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        statsLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         panel.add(markCompleteButton);
         panel.add(editButton);
@@ -169,36 +184,6 @@ public class TodoApp extends JFrame {
         panel.add(statsLabel);
 
         return panel;
-    }
-
-    private JPanel createStatsPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        statsLabel = new JLabel("Statistik: 0 total, 0 fuldført, 0 ikke-fuldført");
-        statsLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        panel.add(statsLabel);
-        return panel;
-    }
-
-    private void setupDragAndDrop() {
-        taskList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                draggedIndex = taskList.locationToIndex(e.getPoint());
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                int targetIndex = taskList.locationToIndex(e.getPoint());
-                if (draggedIndex != -1 && targetIndex != -1 && draggedIndex != targetIndex) {
-                    Task draggedTask = listModel.getElementAt(draggedIndex);
-                    listModel.remove(draggedIndex);
-                    listModel.insertElementAt(draggedTask, targetIndex);
-                    tasks.remove(draggedIndex);
-                    tasks.add(targetIndex, draggedTask);
-                }
-                draggedIndex = -1;
-            }
-        });
     }
 
     private void addTask() {
@@ -216,15 +201,14 @@ public class TodoApp extends JFrame {
             try {
                 deadline = LocalDate.parse(deadlineField.getText().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(this, "Ugyldigt datoformat! Brug dd/MM/yyyy", "Fejl",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Ugyldigt datoformat! Brug dd/MM/yyyy", "Fejl", JOptionPane.ERROR_MESSAGE);
                 return;
             }
         }
 
         Task newTask = new Task(title, priority, category, deadline);
         tasks.add(newTask);
-        updateTaskList();
+        updateTaskTable();
 
         taskField.setText("");
         deadlineField.setText("");
@@ -233,27 +217,28 @@ public class TodoApp extends JFrame {
     }
 
     private void toggleTaskCompleted() {
-        int selectedIndex = taskList.getSelectedIndex();
-        if (selectedIndex != -1) {
-            Task task = listModel.getElementAt(selectedIndex);
+        int selectedRow = taskTable.getSelectedRow();
+        if (selectedRow != -1) {
+            Task task = tableModel.getTaskAt(selectedRow);
             task.setCompleted(!task.isCompleted());
-            listModel.setElementAt(task, selectedIndex);
+            tableModel.fireTableRowsUpdated(selectedRow, selectedRow);
             updateStatsLabel();
         } else {
-            JOptionPane.showMessageDialog(this, "Venligst vælg en opgave!", "Advarsel", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Venligst vaelg en opgave!", "Advarsel", JOptionPane.WARNING_MESSAGE);
         }
     }
 
     private void editTask() {
-        int selectedIndex = taskList.getSelectedIndex();
-        if (selectedIndex == -1) {
-            JOptionPane.showMessageDialog(this, "Venligst vælg en opgave!", "Advarsel", JOptionPane.WARNING_MESSAGE);
+        int selectedRow = taskTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Venligst vaelg en opgave!", "Advarsel", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        Task task = listModel.getElementAt(selectedIndex);
+        Task task = tableModel.getTaskAt(selectedRow);
 
         JPanel editPanel = new JPanel(new GridLayout(4, 2, 5, 5));
+        editPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JLabel titleLabel = new JLabel("Titel:");
         JTextField titleField = new JTextField(task.getTitle());
@@ -291,59 +276,60 @@ public class TodoApp extends JFrame {
 
             if (!deadlineBoxField.getText().trim().isEmpty()) {
                 try {
-                    task.setDeadline(LocalDate.parse(deadlineBoxField.getText().trim(),
-                            DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    task.setDeadline(LocalDate.parse(deadlineBoxField.getText().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy")));
                 } catch (DateTimeParseException ex) {
                     JOptionPane.showMessageDialog(this, "Ugyldigt datoformat!", "Fejl", JOptionPane.ERROR_MESSAGE);
                 }
             }
 
-            listModel.setElementAt(task, selectedIndex);
+            tableModel.fireTableDataChanged();
             updateStatsLabel();
         }
     }
 
     private void deleteTask() {
-        int selectedIndex = taskList.getSelectedIndex();
-        if (selectedIndex != -1) {
-            tasks.remove(selectedIndex);
-            updateTaskList();
+        int selectedRow = taskTable.getSelectedRow();
+        if (selectedRow != -1) {
+            tasks.remove(selectedRow);
+            updateTaskTable();
             updateStatsLabel();
         } else {
-            JOptionPane.showMessageDialog(this, "Venligst vælg en opgave!", "Advarsel", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Venligst vaelg en opgave!", "Advarsel", JOptionPane.WARNING_MESSAGE);
         }
     }
 
     private void clearCompletedTasks() {
-        int response = JOptionPane.showConfirmDialog(this, "Slet alle fuldførte opgaver?", "Bekræft",
-                JOptionPane.YES_NO_OPTION);
+        int response = JOptionPane.showConfirmDialog(this, "Slet alle fuldforte opgaver?", "Bekraeft", JOptionPane.YES_NO_OPTION);
         if (response == JOptionPane.YES_OPTION) {
             tasks = tasks.stream()
                     .filter(t -> !t.isCompleted())
                     .collect(Collectors.toList());
-            updateTaskList();
+            updateTaskTable();
             updateStatsLabel();
         }
     }
 
     private void clearAllTasks() {
-        int response = JOptionPane.showConfirmDialog(this, "Slet alle opgaver?", "Bekræft", JOptionPane.YES_NO_OPTION);
+        int response = JOptionPane.showConfirmDialog(this, "Slet alle opgaver?", "Bekraeft", JOptionPane.YES_NO_OPTION);
         if (response == JOptionPane.YES_OPTION) {
             tasks.clear();
-            updateTaskList();
+            updateTaskTable();
             updateStatsLabel();
         }
     }
 
-    private void updateTaskList() {
-        listModel.clear();
+    private void updateTaskTable() {
+        List<Task> filteredTasks = new ArrayList<>();
         String selectedFilter = (String) categoryFilterCombo.getSelectedItem();
 
         for (Task task : tasks) {
             if (selectedFilter.equals("Alle") || task.getCategory().equals(selectedFilter)) {
-                listModel.addElement(task);
+                filteredTasks.add(task);
             }
         }
+
+        tableModel.setTasks(filteredTasks);
+        tableModel.fireTableDataChanged();
     }
 
     private void updateStatsLabel() {
@@ -351,30 +337,88 @@ public class TodoApp extends JFrame {
         long completed = tasks.stream().filter(Task::isCompleted).count();
         long notCompleted = total - completed;
 
-        statsLabel.setText(
-                String.format("Statistik: %d total | %d fuldført | %d ikke-fuldført", total, completed, notCompleted));
+        statsLabel.setText(String.format("Statistik: %d total | %d fuldfoert | %d ikke-fuldfoert", total, completed, notCompleted));
     }
 
-    // Custom ListCellRenderer for styling completed tasks
-    private class TaskListCellRenderer extends DefaultListCellRenderer {
+    private class TaskTableModel extends AbstractTableModel {
+        private List<Task> taskList;
+        private final String[] columnNames = {"OK", "Titel", "Prioritet", "Kategori", "Deadline"};
+
+        public TaskTableModel(List<Task> tasks) {
+            this.taskList = new ArrayList<>(tasks);
+        }
+
+        public void setTasks(List<Task> tasks) {
+            this.taskList = new ArrayList<>(tasks);
+        }
+
+        public Task getTaskAt(int row) {
+            return taskList.get(row);
+        }
+
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
-                boolean cellHasFocus) {
-            Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        public int getRowCount() {
+            return taskList.size();
+        }
 
-            if (value instanceof Task) {
-                Task task = (Task) value;
-                setText(task.toString());
+        @Override
+        public int getColumnCount() {
+            return columnNames.length;
+        }
 
+        @Override
+        public String getColumnName(int column) {
+            return columnNames[column];
+        }
+
+        @Override
+        public Object getValueAt(int row, int column) {
+            Task task = taskList.get(row);
+            switch (column) {
+                case 0:
+                    return task.isCompleted() ? "YES" : "NO";
+                case 1:
+                    return task.getTitle();
+                case 2:
+                    return task.getPriority().getDisplayName();
+                case 3:
+                    return task.getCategory();
+                case 4:
+                    return task.getDeadlineString();
+                default:
+                    return "";
+            }
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    }
+
+    private class TaskTableCellRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+            Task task = tableModel.getTaskAt(row);
+
+            if (isSelected) {
+                c.setBackground(new Color(70, 130, 180));
+                c.setForeground(Color.WHITE);
+            } else {
                 if (task.isCompleted()) {
+                    c.setBackground(new Color(220, 220, 220));
                     c.setForeground(new Color(100, 100, 100));
                     setFont(new Font("Arial", Font.ITALIC, 12));
                 } else {
+                    c.setBackground(Color.WHITE);
                     c.setForeground(Color.BLACK);
                     setFont(new Font("Arial", Font.PLAIN, 12));
                 }
             }
 
+            setHorizontalAlignment(column == 0 ? CENTER : LEFT);
             return c;
         }
     }
