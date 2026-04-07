@@ -127,7 +127,7 @@ public class TodoApp extends JFrame {
         taskList = new JList<>(listModel);
         taskList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         taskList.setCellRenderer(new TaskListCellRenderer());
-        
+
         setupDragAndDrop();
         taskList.addListSelectionListener(e -> updateStatsLabel());
 
@@ -141,13 +141,13 @@ public class TodoApp extends JFrame {
         JPanel panel = new JPanel(new GridLayout(2, 3, 5, 5));
         panel.setBorder(BorderFactory.createTitledBorder("Handlinger"));
 
-        markCompleteButton = new JButton("✓ Mark som fuldført");
+        markCompleteButton = new JButton("Mark som fuldført");
         markCompleteButton.addActionListener(e -> toggleTaskCompleted());
 
-        JButton editButton = new JButton("✎ Rediger");
+        JButton editButton = new JButton("Rediger");
         editButton.addActionListener(e -> editTask());
 
-        deleteButton = new JButton("✕ Slet opgave");
+        deleteButton = new JButton("Slet opgave");
         deleteButton.addActionListener(e -> deleteTask());
 
         JButton clearCompletedButton = new JButton("Ryd fuldførte");
@@ -214,7 +214,8 @@ public class TodoApp extends JFrame {
             try {
                 deadline = LocalDate.parse(deadlineField.getText().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(this, "Ugyldigt datoformat! Brug dd/MM/yyyy", "Fejl", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Ugyldigt datoformat! Brug dd/MM/yyyy", "Fejl",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
         }
@@ -249,26 +250,27 @@ public class TodoApp extends JFrame {
         }
 
         Task task = listModel.getElementAt(selectedIndex);
-        
+
         JPanel editPanel = new JPanel(new GridLayout(4, 2, 5, 5));
-        
+
         JLabel titleLabel = new JLabel("Titel:");
         JTextField titleField = new JTextField(task.getTitle());
-        
+
         JLabel priorityLabel = new JLabel("Prioritet:");
         JComboBox<Task.Priority> priorityBox = new JComboBox<>(Task.Priority.values());
         priorityBox.setSelectedItem(task.getPriority());
-        
+
         JLabel categoryLabel = new JLabel("Kategori:");
         JComboBox<String> categoryBox = new JComboBox<>();
         for (String cat : categories) {
             categoryBox.addItem(cat);
         }
         categoryBox.setSelectedItem(task.getCategory());
-        
+
         JLabel deadlineLabel = new JLabel("Deadline (dd/MM/yyyy):");
-        JTextField deadlineBoxField = new JTextField(task.getDeadline() != null ? task.getDeadline().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
-        
+        JTextField deadlineBoxField = new JTextField(
+                task.getDeadline() != null ? task.getDeadline().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
+
         editPanel.add(titleLabel);
         editPanel.add(titleField);
         editPanel.add(priorityLabel);
@@ -277,22 +279,23 @@ public class TodoApp extends JFrame {
         editPanel.add(categoryBox);
         editPanel.add(deadlineLabel);
         editPanel.add(deadlineBoxField);
-        
+
         int result = JOptionPane.showConfirmDialog(this, editPanel, "Rediger opgave", JOptionPane.OK_CANCEL_OPTION);
-        
+
         if (result == JOptionPane.OK_OPTION) {
             task.setTitle(titleField.getText().trim());
             task.setPriority((Task.Priority) priorityBox.getSelectedItem());
             task.setCategory((String) categoryBox.getSelectedItem());
-            
+
             if (!deadlineBoxField.getText().trim().isEmpty()) {
                 try {
-                    task.setDeadline(LocalDate.parse(deadlineBoxField.getText().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    task.setDeadline(LocalDate.parse(deadlineBoxField.getText().trim(),
+                            DateTimeFormatter.ofPattern("dd/MM/yyyy")));
                 } catch (DateTimeParseException ex) {
                     JOptionPane.showMessageDialog(this, "Ugyldigt datoformat!", "Fejl", JOptionPane.ERROR_MESSAGE);
                 }
             }
-            
+
             listModel.setElementAt(task, selectedIndex);
             updateStatsLabel();
         }
@@ -310,7 +313,8 @@ public class TodoApp extends JFrame {
     }
 
     private void clearCompletedTasks() {
-        int response = JOptionPane.showConfirmDialog(this, "Slet alle fuldførte opgaver?", "Bekræft", JOptionPane.YES_NO_OPTION);
+        int response = JOptionPane.showConfirmDialog(this, "Slet alle fuldførte opgaver?", "Bekræft",
+                JOptionPane.YES_NO_OPTION);
         if (response == JOptionPane.YES_OPTION) {
             tasks = tasks.stream()
                     .filter(t -> !t.isCompleted())
@@ -345,19 +349,21 @@ public class TodoApp extends JFrame {
         long completed = tasks.stream().filter(Task::isCompleted).count();
         long notCompleted = total - completed;
 
-        statsLabel.setText(String.format("Statistik: %d total | %d fuldført | %d ikke-fuldført", total, completed, notCompleted));
+        statsLabel.setText(
+                String.format("Statistik: %d total | %d fuldført | %d ikke-fuldført", total, completed, notCompleted));
     }
 
     // Custom ListCellRenderer for styling completed tasks
     private class TaskListCellRenderer extends DefaultListCellRenderer {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
+                boolean cellHasFocus) {
             Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            
+
             if (value instanceof Task) {
                 Task task = (Task) value;
                 setText(task.toString());
-                
+
                 if (task.isCompleted()) {
                     c.setForeground(new Color(100, 100, 100));
                     setFont(new Font("Arial", Font.ITALIC, 12));
@@ -366,7 +372,7 @@ public class TodoApp extends JFrame {
                     setFont(new Font("Arial", Font.PLAIN, 12));
                 }
             }
-            
+
             return c;
         }
     }
