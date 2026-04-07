@@ -93,21 +93,21 @@ public class Task implements Serializable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        
+
         if (completed) {
             sb.append("[✓] ");
         } else {
             sb.append("[ ] ");
         }
-        
+
         sb.append(title);
         sb.append(" | ").append(priority.getDisplayName());
         sb.append(" | ").append(category);
-        
+
         if (deadline != null) {
             sb.append(" | Deadline: ").append(getDeadlineString());
         }
-        
+
         return sb.toString();
     }
 }

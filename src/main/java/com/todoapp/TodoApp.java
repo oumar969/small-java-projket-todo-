@@ -201,7 +201,8 @@ public class TodoApp extends JFrame {
             try {
                 deadline = LocalDate.parse(deadlineField.getText().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(this, "Ugyldigt datoformat! Brug dd/MM/yyyy", "Fejl", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Ugyldigt datoformat! Brug dd/MM/yyyy", "Fejl",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
         }
@@ -276,7 +277,8 @@ public class TodoApp extends JFrame {
 
             if (!deadlineBoxField.getText().trim().isEmpty()) {
                 try {
-                    task.setDeadline(LocalDate.parse(deadlineBoxField.getText().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    task.setDeadline(LocalDate.parse(deadlineBoxField.getText().trim(),
+                            DateTimeFormatter.ofPattern("dd/MM/yyyy")));
                 } catch (DateTimeParseException ex) {
                     JOptionPane.showMessageDialog(this, "Ugyldigt datoformat!", "Fejl", JOptionPane.ERROR_MESSAGE);
                 }
@@ -299,7 +301,8 @@ public class TodoApp extends JFrame {
     }
 
     private void clearCompletedTasks() {
-        int response = JOptionPane.showConfirmDialog(this, "Slet alle fuldforte opgaver?", "Bekraeft", JOptionPane.YES_NO_OPTION);
+        int response = JOptionPane.showConfirmDialog(this, "Slet alle fuldforte opgaver?", "Bekraeft",
+                JOptionPane.YES_NO_OPTION);
         if (response == JOptionPane.YES_OPTION) {
             tasks = tasks.stream()
                     .filter(t -> !t.isCompleted())
@@ -337,12 +340,13 @@ public class TodoApp extends JFrame {
         long completed = tasks.stream().filter(Task::isCompleted).count();
         long notCompleted = total - completed;
 
-        statsLabel.setText(String.format("Statistik: %d total | %d fuldfoert | %d ikke-fuldfoert", total, completed, notCompleted));
+        statsLabel.setText(String.format("Statistik: %d total | %d fuldfoert | %d ikke-fuldfoert", total, completed,
+                notCompleted));
     }
 
     private class TaskTableModel extends AbstractTableModel {
         private List<Task> taskList;
-        private final String[] columnNames = {"OK", "Titel", "Prioritet", "Kategori", "Deadline"};
+        private final String[] columnNames = { "OK", "Titel", "Prioritet", "Kategori", "Deadline" };
 
         public TaskTableModel(List<Task> tasks) {
             this.taskList = new ArrayList<>(tasks);
@@ -398,7 +402,8 @@ public class TodoApp extends JFrame {
 
     private class TaskTableCellRenderer extends DefaultTableCellRenderer {
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+                int row, int column) {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
             Task task = tableModel.getTaskAt(row);
