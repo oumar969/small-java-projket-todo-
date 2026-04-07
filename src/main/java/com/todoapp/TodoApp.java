@@ -51,10 +51,12 @@ public class TodoApp extends JFrame {
         JPanel filterPanel = createFilterPanel();
         JPanel listPanel = createListPanel();
         JPanel buttonPanel = createButtonPanel();
-        JPanel statsPanel = createStatsPanel();
 
-        mainPanel.add(inputPanel, BorderLayout.NORTH);
-        mainPanel.add(filterPanel, BorderLayout.NORTH);
+        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
+        topPanel.add(inputPanel, BorderLayout.NORTH);
+        topPanel.add(filterPanel, BorderLayout.SOUTH);
+
+        mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(listPanel, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -63,7 +65,7 @@ public class TodoApp extends JFrame {
 
     private JPanel createInputPanel() {
         JPanel panel = new JPanel(new GridLayout(2, 4, 5, 5));
-        panel.setBorder(BorderFactory.createTitledBorder("Tilføj ny opgave"));
+        panel.setBorder(BorderFactory.createTitledBorder("Tilfoj ny opgave"));
 
         JLabel taskLabel = new JLabel("Opgave:");
         taskField = new JTextField();
@@ -80,7 +82,7 @@ public class TodoApp extends JFrame {
         JLabel deadlineLabel = new JLabel("Deadline (dd/MM/yyyy):");
         deadlineField = new JTextField();
 
-        addButton = new JButton("Tilføj opgave");
+        addButton = new JButton("Tilfoj opgave");
         addButton.addActionListener(e -> addTask());
 
         panel.add(taskLabel);
@@ -141,7 +143,7 @@ public class TodoApp extends JFrame {
         JPanel panel = new JPanel(new GridLayout(2, 3, 5, 5));
         panel.setBorder(BorderFactory.createTitledBorder("Handlinger"));
 
-        markCompleteButton = new JButton("Mark som fuldført");
+        markCompleteButton = new JButton("Mark som fuldfort");
         markCompleteButton.addActionListener(e -> toggleTaskCompleted());
 
         JButton editButton = new JButton("Rediger");
@@ -150,13 +152,13 @@ public class TodoApp extends JFrame {
         deleteButton = new JButton("Slet opgave");
         deleteButton.addActionListener(e -> deleteTask());
 
-        JButton clearCompletedButton = new JButton("Ryd fuldførte");
+        JButton clearCompletedButton = new JButton("Ryd fuldforte");
         clearCompletedButton.addActionListener(e -> clearCompletedTasks());
 
         JButton clearAllButton = new JButton("Ryd alt");
         clearAllButton.addActionListener(e -> clearAllTasks());
 
-        statsLabel = new JLabel("Statistik: 0 total, 0 fuldført");
+        statsLabel = new JLabel("Statistik: 0 total, 0 fuldfort");
         statsLabel.setFont(new Font("Arial", Font.BOLD, 12));
 
         panel.add(markCompleteButton);
